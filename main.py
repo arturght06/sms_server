@@ -1,6 +1,6 @@
 import base64
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 import json
 # from typing import List
@@ -53,12 +53,14 @@ FILE_PATH = "data.json"
 #         raise ValueError(f"Error parsing SMS string: {e}")
 
 @app.post("/save")
-async def save_item(sms_string: str):
+async def save_item(request: Request):
     """
     Обрабатывает POST-запрос, принимает строку смс, парсит её в объект Item и сохраняет в файл.
     """
     try:
-        print(base64.b64decode(sms_string).decode("utf-8"))
+        body = (await request.body()).decode("utf-8")
+
+        print(base64.b64decode(body).decode("utf-8"))
         return {"message": "Item saved successfully!"}
 
     except ValueError as e:
