@@ -1,3 +1,5 @@
+import base64
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import json
@@ -56,7 +58,7 @@ async def save_item(sms_string: str):
     Обрабатывает POST-запрос, принимает строку смс, парсит её в объект Item и сохраняет в файл.
     """
     try:
-        print(sms_string)
+        print(base64.b64decode(sms_string.replace(" ", "")).decode("utf-8"))
         return {"message": "Item saved successfully!"}
 
     except ValueError as e:
