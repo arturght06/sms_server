@@ -1,27 +1,29 @@
-from fastapi import FastAPI, HTTPException, Query
+import base64
+from fastapi import FastAPI, HTTPException, Request, Query
 from tools.db import DatabaseSMS
 
 app = FastAPI()
 DB_NAME = "sms.db"
 db = DatabaseSMS(f"sqlite:///{DB_NAME}")
 
+
 @app.post("/save")
-async def save_item(
-    receiver: str,
-    uid: int,
-    sender: str,
-    time: int,
-    subject: str = "",
-    text: str = ""
-):
+async def save_item(request: Request):
     """
-    Сохраняет SMS в базу данных.
+    Обрабатывает POST-запрос, принимает строку смс, парсит её в объект Item и сохраняет в файл.
     """
     try:
-        db.add_sms(uid=uid, receiver=receiver, sender=sender, time=time, subject=subject, text=text)
+        body = (await request.body()).decode("utf-8")
+        body = base64.b64decode(body).decode("utf-8")
+        receiver, uid, sender, time, subject, text = body.split("|", 5)
+        db.add_sms(uid=int(uid), receiver=receiver, sender=sender, time=int(time), subject=subject, text=text)
         return {"message": "SMS saved successfully!"}
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error saving SMS: {e}")
+        raise HTTPException(status_code=500, detail=f"Error saving item: {e}")
+
 
 @app.get("/get")
 async def get_sms(
@@ -53,3 +55,6 @@ async def get_sms(
         ]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving SMS: {e}")
+
+
+
