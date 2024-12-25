@@ -35,12 +35,15 @@ class GetSMSFilters(BaseModel):
 
 @app.post("/get")
 async def get_sms(filters: GetSMSFilters):
+    """
+    Получает список SMS по указанным фильтрам.
+    """
     try:
-        time_range = (filters.time_start, None) if filters.time_start else None
+        # Устанавливаем фильтры
         sms_list = db.get_sms(
             receiver=filters.receiver,
             sender=filters.sender,
-            time_range=time_range,
+            time_range=(filters.time_start, None) if filters.time_start else None,
             text_contains=filters.text_contains,
         )
 
@@ -58,3 +61,4 @@ async def get_sms(filters: GetSMSFilters):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving SMS: {e}")
+
