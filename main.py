@@ -1,6 +1,5 @@
 import base64
 from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel
 from tools.db import DatabaseSMS
 
 app = FastAPI()
@@ -26,26 +25,30 @@ async def save_item(request: Request):
         raise HTTPException(status_code=500, detail=f"Error saving item: {e}")
 
 
-class GetSMSFilters(BaseModel):
-    receiver: str = None
-    sender: str = None
-    time_start: int = None
-    text_contains: str = None
-
-
 @app.post("/get")
-async def get_sms(filters: GetSMSFilters):
+async def get_sms(request: Request):
     """
     Получает список SMS по указанным фильтрам.
     """
     try:
-        # Устанавливаем фильтры
-        sms_list = db.get_sms(
-            receiver=filters.receiver,
-            sender=filters.sender,
-            time_range=(filters.time_start, None) if filters.time_start else None,
-            text_contains=filters.text_contains,
-        )
+        body = await request.json()
+        receiver = body.get("receiver")
+        sender = body.get("sender")
+        time_start = body.get("time_start")
+        text_contains = body.get("text_contains")
+
+        # Фильтры для запроса к базе данных
+        filters = {}
+        if receiver:
+            filters['receiver'] = receiver
+        if sender:
+            filters['sender'] = sender
+        if time_start:
+            filters['time_range'] = (time_start,)
+        if text_contains:
+            filters['text_contains'] = text_contains
+
+        sms_list = db.get_sms(**filters)
 
         return [
             {
@@ -61,4 +64,5 @@ async def get_sms(filters: GetSMSFilters):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving SMS: {e}")
+
 
