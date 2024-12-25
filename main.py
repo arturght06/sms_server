@@ -1,6 +1,6 @@
 import base64
 from fastapi import FastAPI, HTTPException, Request
-import json
+from pydantic import BaseModel
 from tools.db import DatabaseSMS
 
 app = FastAPI()
@@ -25,3 +25,36 @@ async def save_item(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving item: {e}")
 
+
+class GetSMSFilters(BaseModel):
+    receiver: str = None
+    sender: str = None
+    time_start: int = None
+    text_contains: str = None
+
+
+@app.post("/get")
+async def get_sms(filters: GetSMSFilters):
+    try:
+        time_range = (filters.time_start, None) if filters.time_start else None
+        sms_list = db.get_sms(
+            receiver=filters.receiver,
+            sender=filters.sender,
+            time_range=time_range,
+            text_contains=filters.text_contains,
+        )
+
+        return [
+            {
+                "id": sms.id,
+                "receiver": sms.receiver,
+                "sender": sms.sender,
+                "time": sms.time,
+                "subject": sms.subject,
+                "text": sms.text,
+            }
+            for sms in sms_list
+        ]
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving SMS: {e}")

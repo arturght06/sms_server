@@ -31,3 +31,21 @@ class DatabaseSMS:
             raise e
         finally:
             session.close()
+
+    def get_sms(self, receiver: str = None, sender: str = None, time_range: tuple = None, text_contains: str = None):
+        session = self.Session()
+        try:
+            query = session.query(SMS)
+            if receiver:
+                query = query.filter(SMS.receiver == receiver)
+            if sender:
+                query = query.filter(SMS.sender == sender)
+            if time_range:
+                start, end = time_range
+                query = query.filter(SMS.time >= start, SMS.time <= end)
+            if text_contains:
+                query = query.filter(SMS.text.contains(text_contains))
+
+            return query.all()
+        finally:
+            session.close()
