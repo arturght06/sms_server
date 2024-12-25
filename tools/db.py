@@ -32,7 +32,7 @@ class DatabaseSMS:
         finally:
             session.close()
 
-    def get_sms(self, receiver: str = None, sender: str = None, time_range: tuple = None, text_contains: str = None):
+    def get_sms(self, receiver: str = None, sender: str = None, time_start: int = None, text_contains: str = None):
         session = self.Session()
         try:
             query = session.query(SMS)
@@ -40,9 +40,8 @@ class DatabaseSMS:
                 query = query.filter(SMS.receiver == receiver)
             if sender:
                 query = query.filter(SMS.sender == sender)
-            if time_range:
-                start, end = time_range
-                query = query.filter(SMS.time >= start, SMS.time <= end)
+            if time_start:
+                query = query.filter(SMS.time >= time_start)
             if text_contains:
                 query = query.filter(SMS.text.contains(text_contains))
 
