@@ -7,7 +7,7 @@ Base = declarative_base()
 class SMS(Base):
     __tablename__ = 'sms'
 
-    id = Column(Integer, primary_key=True)  # Уникальный ID без автоинкремента
+    id = Column(Integer, primary_key=True, autoincrement=True)
     receiver = Column(String, nullable=False)
     sender = Column(String, nullable=False)
     time = Column(Integer, nullable=False)
@@ -23,18 +23,27 @@ class DatabaseSMS:
     def add_sms(self, uid: int, receiver: str, sender: str, time: int, subject: str, text: str):
         session = self.Session()
         try:
-            # Проверяем, существует ли уже запись с данным ID
-            existing_sms = session.query(SMS).filter_by(id=uid).first()
-            if existing_sms is None:
-                sms = SMS(id=uid, receiver=receiver, sender=sender, time=time, subject=subject, text=text)
-                session.add(sms)
-                session.commit()
+            exists = session.query(SMS).filter_by(
+                id=uid,
+                receiver=receiver,
+                sender=sender,
+                time=time,
+                subject=subject,
+                text=text
+            ).first()
+
+            if exists:
+                print(f"Message {uid} already exists in DB!")
+                return
+
+            sms = SMS(id=uid, receiver=receiver, sender=sender, time=time, subject=subject, text=text)
+            session.add(sms)
+            session.commit()
         except Exception as e:
             session.rollback()
             raise e
         finally:
             session.close()
-
 
     def get_sms(self, receiver: str = None, sender: str = None, time_start: int = None, text_contains: str = None):
         session = self.Session()
