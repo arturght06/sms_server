@@ -45,10 +45,12 @@ class DatabaseSMS:
         finally:
             session.close()
 
-    def get_sms(self, receiver: str = None, sender: str = None, time_start: int = None, text_contains: str = None):
+    def get_sms(self, uid: int = None, receiver: str = None, sender: str = None, time_start: int = None, text_contains: str = None):
         session = self.Session()
         try:
             query = session.query(SMS)
+            if uid:
+                query = query.filter(SMS.id == uid)
             if receiver:
                 query = query.filter(SMS.receiver == receiver)
             if sender:

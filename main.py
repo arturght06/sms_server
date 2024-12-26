@@ -27,6 +27,7 @@ async def save_item(request: Request):
 
 @app.get("/get")
 async def get_sms(
+    uid: int = Query(None, description="SMS id"),
     receiver: str = Query(None, description="Receiver number"),
     sender: str = Query(None, description="Sender number"),
     time_start: int = Query(None, description="Start time as Unix timestamp"),
@@ -37,6 +38,7 @@ async def get_sms(
     """
     try:
         sms_list = db.get_sms(
+            uid=uid,
             receiver=receiver,
             sender=sender,
             time_start=time_start,
